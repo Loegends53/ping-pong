@@ -10,6 +10,11 @@ init()                      # Ініціалізація pygame
 screen = display.set_mode((WIDTH, HEIGHT))  # Створення вікна
 clock = time.Clock()        # Таймер для обмеження FPS
 display.set_caption("Пінг-Понг")  # Заголовок вікна
+
+# --- СЛЕД МЯЧА ---
+ball_trail = []          # список предыдущих позиций
+MAX_TRAIL = 15           # длина следа
+
  
 # --- СЕРВЕР ---
 def connect_to_server():
@@ -118,6 +123,13 @@ while True:
     # --- ОСНОВНЕ МАЛЮВАННЯ ГРИ ---
     if game_state:
         screen.blit(background, (0, 0))
+        # Добавляем позицию мяча в след
+        ball_pos = (game_state['ball']['x'], game_state['ball']['y'])
+        ball_trail.append(ball_pos)
+
+        if len(ball_trail) > MAX_TRAIL:
+            ball_trail.pop(0)
+
  
         # Ліва ракетка (гравець 0)
         draw.rect(
@@ -130,7 +142,15 @@ while True:
             screen, (255, 0, 255),
             (WIDTH - 40, game_state['paddles']['1'], 20, 100)
         )
- 
+         # Рисуем след
+        for i, pos in enumerate(ball_trail):
+            radius = int(10 * (i + 1) / MAX_TRAIL)
+            alpha = int(255 * (i + 1) / MAX_TRAIL)
+
+            trail_surface = Surface((radius * 2, radius * 2), SRCALPHA)
+            draw.circle(trail_surface, (0, 0, 255, alpha), (radius, radius), radius)
+            screen.blit(trail_surface, (pos[0] - radius, pos[1] - radius))
+
         # Мʼяч
         draw.circle(
             screen, ((0, 0, 255)),
@@ -140,7 +160,7 @@ while True:
         # Рахунок
         score_text = font_main.render(
             f"{game_state['scores'][0]} : {game_state['scores'][1]}",
-            True, (255, 255, 255)
+            True, (0, 0, 0)
         )
         screen.blit(score_text, (WIDTH // 2 - 25, 20))
  
